@@ -4,6 +4,8 @@
 from pathlib import Path
 import struct
 
+from validation_binary import read_arm9
+
 
 ROOT = Path(__file__).resolve().parent.parent
 ARM9 = ROOT / "base/arm9.bin"
@@ -22,7 +24,7 @@ HOOK_PREFIX = bytes.fromhex("00 4B 18 47")  # ldr r3, [pc]; bx r3
 
 
 def main():
-    arm9 = ARM9.read_bytes()
+    arm9 = read_arm9(ARM9)
     for offset, expected in HOOKS.items():
         actual = arm9[offset:offset + 8]
         if actual == expected:

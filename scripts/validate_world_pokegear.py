@@ -4,7 +4,7 @@
 from pathlib import Path
 import struct
 
-import ndspy.codeCompression
+from validation_binary import read_overlay
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -35,11 +35,7 @@ HOOK_PREFIX = bytes.fromhex("01 4B 18 47 00 00")
 
 
 def load_runtime_overlay() -> bytes:
-    stored = OVERLAY.read_bytes()
-    try:
-        runtime = ndspy.codeCompression.decompress(stored)
-    except ValueError:
-        runtime = stored
+    runtime = read_overlay(OVERLAY)
 
     if len(runtime) != OVERLAY_SIZE:
         raise RuntimeError(

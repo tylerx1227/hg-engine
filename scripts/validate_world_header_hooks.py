@@ -4,6 +4,8 @@
 from pathlib import Path
 import struct
 
+from validation_binary import read_arm9
+
 
 ROOT = Path(__file__).resolve().parent.parent
 ARM9 = ROOT / "base/arm9.bin"
@@ -49,7 +51,7 @@ SEMANTIC_HOOKS = {
 
 
 def main():
-    arm9 = ARM9.read_bytes()
+    arm9 = read_arm9(ARM9)
     for offset, expected_hex in ACCESSORS.items():
         actual = arm9[offset:offset + 8]
         if actual == bytes.fromhex(expected_hex):

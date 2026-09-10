@@ -7,6 +7,8 @@ import json
 import re
 import struct
 
+from validation_binary import read_arm9
+
 
 ROOT = Path(__file__).resolve().parent.parent
 ARM9 = ROOT / "base/arm9.bin"
@@ -44,7 +46,7 @@ EXPECTED_STOCK_IDS = [
 
 
 def validate_hook():
-    arm9 = ARM9.read_bytes()
+    arm9 = read_arm9(ARM9)
     actual = arm9[HOOK_OFFSET:HOOK_OFFSET + 8]
     if actual == VANILLA_PREFIX:
         return
@@ -59,7 +61,7 @@ def validate_hook():
 
 
 def validate_mapping_transition():
-    arm9 = ARM9.read_bytes()
+    arm9 = read_arm9(ARM9)
     actual_rows = [
         struct.unpack_from("<3H", arm9, MAPPING_OFFSET + index * 6)
         for index in range(30)

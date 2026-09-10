@@ -6,6 +6,8 @@ import json
 import re
 import struct
 
+from validation_binary import read_arm9, read_overlay
+
 
 ROOT = Path(__file__).resolve().parent.parent
 ARM9 = ROOT / "base/arm9.bin"
@@ -183,7 +185,7 @@ def validate_source():
 
 
 def validate_hook():
-    arm9 = ARM9.read_bytes()
+    arm9 = read_arm9(ARM9)
     for hook_offset, (label, retail_hook, hook_prefix) in HOOKS.items():
         actual = arm9[hook_offset:hook_offset + len(retail_hook)]
         if actual == retail_hook:
@@ -197,7 +199,7 @@ def validate_hook():
             f"found {actual.hex(' ').upper()}. Stop before overwriting it."
         )
 
-    overlay = OVERLAY_1.read_bytes()
+    overlay = read_overlay(OVERLAY_1)
     for address, (label, retail_hook, hook_prefix) in OVERLAY_1_HOOKS.items():
         offset = address - OVERLAY_1_BASE
         actual = overlay[offset:offset + len(retail_hook)]

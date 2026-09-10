@@ -4,6 +4,8 @@
 from pathlib import Path
 import struct
 
+from validation_binary import read_arm9
+
 
 ROOT = Path(__file__).resolve().parent.parent
 ARM9 = ROOT / "base/arm9.bin"
@@ -17,7 +19,7 @@ MEMBERS = ROOT / "world/members/level_scripts"
 
 
 def validate_hook():
-    actual = ARM9.read_bytes()[HOOK_OFFSET:HOOK_OFFSET + 8]
+    actual = read_arm9(ARM9)[HOOK_OFFSET:HOOK_OFFSET + 8]
     if actual == VANILLA_PREFIX:
         return
     if actual[:4] == HOOK_PREFIX:

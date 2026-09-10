@@ -4,6 +4,8 @@
 from pathlib import Path
 import struct
 
+from validation_binary import read_arm9, read_overlay
+
 
 ROOT = Path(__file__).resolve().parent.parent
 ARM9 = ROOT / "base/arm9.bin"
@@ -40,7 +42,7 @@ OVERLAY_1_HOOKS = {
 
 
 def main():
-    arm9 = ARM9.read_bytes()
+    arm9 = read_arm9(ARM9)
     for offset, expected in HOOKS.items():
         actual = arm9[offset:offset + 8]
         if actual == expected:
@@ -57,7 +59,7 @@ def main():
         )
 
 
-    overlay_1 = OVERLAY_1.read_bytes()
+    overlay_1 = read_overlay(OVERLAY_1)
     for address, (expected, accepted_hook_prefixes) in OVERLAY_1_HOOKS.items():
         offset = address - OVERLAY_1_BASE
         actual = overlay_1[offset:offset + 8]

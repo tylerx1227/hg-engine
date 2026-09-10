@@ -4,6 +4,8 @@
 from pathlib import Path
 import struct
 
+from validation_binary import read_arm9, read_overlay
+
 
 ROOT = Path(__file__).resolve().parent.parent
 ARM9 = ROOT / "base/arm9.bin"
@@ -43,7 +45,7 @@ def validate_site(label: str, actual: bytes, expected: bytes, hook_prefix: bytes
 
 
 def main():
-    arm9 = ARM9.read_bytes()
+    arm9 = read_arm9(ARM9)
     for offset, (expected, hook_prefix) in ARM9_HOOKS.items():
         validate_site(
             f"ARM9+0x{offset:06X}",
@@ -52,7 +54,7 @@ def main():
             hook_prefix,
         )
 
-    overlay_1 = OVERLAY_1.read_bytes()
+    overlay_1 = read_overlay(OVERLAY_1)
     for address, (expected, hook_prefix) in OVERLAY_1_HOOKS.items():
         offset = address - OVERLAY_1_BASE
         validate_site(

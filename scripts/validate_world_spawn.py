@@ -6,6 +6,8 @@ import json
 import re
 import struct
 
+from validation_binary import read_arm9
+
 
 ROOT = Path(__file__).resolve().parent.parent
 ARM9 = ROOT / "base/arm9.bin"
@@ -111,7 +113,7 @@ def validate_source_table():
 
 
 def validate_hooks():
-    arm9 = ARM9.read_bytes()
+    arm9 = read_arm9(ARM9)
     for offset, retail in HOOKS.items():
         actual = arm9[offset:offset + len(retail)]
         if actual == retail:
