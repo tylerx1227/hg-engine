@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "locationFormat": ["header", "warp", "x", "y", "direction"],
+  "config": {
+    "featureFlags": 0,
+    "initialSpawnId": 1,
+    "mainMatrixId": 0,
+    "newGameStart": [0, -1, 6, 6, 1],
+    "postGameCurrentPosition": [0, -1, 6, 6, 1],
+    "postGameSpecialSpawn": [0, -1, 6, 6, 1]
+  },
+  "spawns": [
+    {
+      "name": "Bootstrap",
+      "blackout": true,
+      "fly": false,
+      "flypointFlagIndex": 65535,
+      "recoveryKind": "home",
+      "recoveryScriptId": 65535,
+      "death": [0, -1, 6, 6, 1],
+      "flyDestination": [0, -1, 6, 6, 1],
+      "specialDestination": [0, -1, 6, 6, 1]
+    }
+  ]
+}

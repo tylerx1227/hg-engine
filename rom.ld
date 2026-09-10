@@ -40,6 +40,8 @@ ItemDataIndex = 0x2100194;
 
 gf_rand = 0x0201FD44 |1;
 GF_ASSERT_INTERNAL = 0x0202551C | 1;
+Save_VarsFlags_Get = 0x020503D0 | 1;
+Save_VarsFlags_FlypointFlagAction = 0x02066930 | 1;
 SetPokemonGet = 0x0202A434 |1;
 SetPokemonSee = 0x0202A36C |1;
 UpdatePokedexWithReceivedSpecies = 0x0202ECC0 | 1;
@@ -48,6 +50,9 @@ ReadWholeNarcMemberByIdPair = 0x02007509;
 AllocAndReadFromNarcMemberByIdPair = 0x0200757C | 1;
 NARC_New = 0x02007688 | 1;
 NARC_Delete = 0x0200770C | 1;
+NARC_ReadWholeMember = 0x0200778C | 1;
+NARC_GetMemberSize = 0x020077E8 | 1;
+NARC_GetFileCount = 0x020078E8 | 1;
 ReadFromNarcMemberByIdPair = 0x02007560 | 1;
 /*sqrt = 0x0200048A | 1;*/
 
@@ -875,6 +880,9 @@ Save_GameStats_Get = 0x0202CF54 | 1;
 GameStats_Inc = 0x0202D0FC | 1;
 
 StringExpandPlaceholders = 0x0200CBBC | 1;
+
+Save_LocalFieldData_Get = 0x0203B9C4 | 1;
+LocalFieldData_GetBlackoutSpawn = 0x0203B994 | 1;
 
 ov12_02256694 = 0x02256694 | 1;
 BattleBuffer_GetNext = 0x0225682C | 1;

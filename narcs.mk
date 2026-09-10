@@ -674,14 +674,13 @@ SCR_SEQ_NARC := $(BUILD_NARC)/scr_seq.narc
 SCR_SEQ_TARGET := $(FILESYS)/a/0/1/2
 SCR_SEQ_DEPENDENCIES_DIR := armips/scr_seq
 SCR_SEQ_DEPENDENCIES := $(SCR_SEQ_DEPENDENCIES_DIR)/*
+SCR_SEQ_WORLD_MEMBERS := $(wildcard world/members/scripts/*)
 
-$(SCR_SEQ_NARC): $(SCR_SEQ_DEPENDENCIES)
-	$(NARCHIVE) extract $(SCR_SEQ_TARGET) -o $(SCR_SEQ_DIR) -nf
-	for file in $^; do $(ARMIPS) $$file; done
+$(SCR_SEQ_NARC): $(SCR_SEQ_WORLD_MEMBERS) narcs.mk
+	rm -rf $(SCR_SEQ_DIR)
+	mkdir -p $(SCR_SEQ_DIR)
+	cp $(SCR_SEQ_WORLD_MEMBERS) $(SCR_SEQ_DIR)/
 	$(NARCHIVE) create $@ $(SCR_SEQ_DIR) -nf
-
-# for convenience, rebuild SCR_SEQ_NARC every build so that DSPRE changes are not overwritten
-.PHONY: $(SCR_SEQ_NARC)
 
 NARC_FILES += $(SCR_SEQ_NARC)
 

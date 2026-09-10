@@ -2,6 +2,47 @@
 #include "include/debug.h"
 #include "include/constants/save.h"
 
+# Restore Nintendo's exact standard/common-script loader. Engine Scripts are
+# routed without replacing this function by remapping internal NARC ID 12 to
+# a/3/0/2 in gWorldNarcFileList.
+arm9 02040168 38 B5 0D 1C 11 1C 1C 1C
+
+# Compact Engine Script member IDs in sScriptBankMapping. Public standard
+# script numbers and their protected Global Text banks remain unchanged.
+arm9 020FA4A6 16 00
+arm9 020FA4AC 17 00
+arm9 020FA4B2 02 00
+arm9 020FA4B8 0F 00
+arm9 020FA4BE 1A 00
+arm9 020FA4C4 19 00
+arm9 020FA4CA 09 00
+arm9 020FA4D0 1D 00
+arm9 020FA4D6 1C 00
+arm9 020FA4DC 0B 00
+arm9 020FA4E2 0C 00
+arm9 020FA4E8 05 00
+arm9 020FA4EE 14 00
+arm9 020FA4F4 13 00
+arm9 020FA4FA 10 00
+arm9 020FA500 0D 00
+arm9 020FA506 18 00
+arm9 020FA50C 08 00
+arm9 020FA512 11 00
+arm9 020FA518 00 00
+arm9 020FA51E 04 00
+arm9 020FA524 12 00
+arm9 020FA52A 15 00
+arm9 020FA530 0A 00
+arm9 020FA536 07 00
+arm9 020FA53C 1B 00
+arm9 020FA542 1B 00
+arm9 020FA548 0E 00
+arm9 020FA54E 01 00
+arm9 020FA554 03 00
+
+# scriptId == 0 loads protected Engine Script 006 (old physical 140).
+arm9 02040156 06 22
+
 #updating old moves
 
 #Binding moves 1/8th
@@ -347,6 +388,16 @@ arm9 02074128 F8 B5 82 B0 00 90 00 20
 
 # expand allowed terrain platforms
 0012 02265FEE FF
+
+# Tyler World: Pokegear Header 000 reclamation. Overlay 101 is decompressed
+# by scripts/make.py before these audited instruction replacements are made.
+# Store 0xFFFF for inactive roamers instead of real Header 000.
+0101 021E7B08 E7 43
+# Test bit 15 of the u16 roamer map ID: ordinary Header IDs 0..32767 take the
+# active path, while the 0xFFFF inactive sentinel takes the hidden path.
+0101 021EA3A2 08 04 12 D5
+# Let map-marking lookup accept Header 000.
+0101 021ED618 02 DA
 
 #ifdef DEBUG_ALWAYS_OBEY
 0012 0224AED0 00 20 70 47

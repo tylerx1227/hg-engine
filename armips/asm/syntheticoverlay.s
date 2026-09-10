@@ -23,7 +23,6 @@ load_arm9_expansion: // load the narc subfile with arm9 expansion data
     bl HandleLoadOverlay129 // HandleLoadOverlay(129, 2) // noinit load
 
     mov r0, #0
-    mov r0, #0
     mov r1, #3
     pop {r2, pc}
 

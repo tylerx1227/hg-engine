@@ -11,7 +11,7 @@
 
 // text archive to grab from: 040.txt
 
-.create "build/a012/2_003", 0
+.create "world/engine_scripts/members/0003", 0
 
 
 scrdef scr_seq_0003_000

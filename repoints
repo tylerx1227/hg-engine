@@ -1,5 +1,16 @@
 #include "include/config.h"
 
+# Extended NARC path table. Each guarded row accepts the untouched retail
+# pointer or the exact value recorded by the preceding successful build.
+arm9 gWorldNarcFileList 02007520 expected=0210F210
+arm9 gWorldNarcFileList 0200753C expected=0210F210
+arm9 gWorldNarcFileList 0200755C expected=0210F210
+arm9 gWorldNarcFileList 02007578 expected=0210F210
+arm9 gWorldNarcFileList 02007598 expected=0210F210
+arm9 gWorldNarcFileList 020075B8 expected=0210F210
+arm9 gWorldNarcFileList 02007684 expected=0210F210
+arm9 gWorldNarcFileList 02007708 expected=0210F210
+
 0012 SkillMenuTouchData 0226E930
 0012 SkillMenuTouchRet 0226E934
 0012 SkillMenuPaletteNo 0226E938

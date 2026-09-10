@@ -6,7 +6,7 @@
 .include "armips/include/soundeffects.s"
 .include "armips/include/vars.s"
 
-.create "build/a012/2_953", 0
+.create "world/engine_scripts/members/0027", 0
 
 /* Trainer   0 */ scrdef scr_seq_0953_normalTrainer
 /* Trainer   1 */ scrdef scr_seq_0953_normalTrainer

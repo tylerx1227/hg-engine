@@ -69,7 +69,7 @@ PYTHON = $(PYTHON_NO_VENV)
 VENV_ACTIVATE =
 endif
 
-.PHONY: clean all dumprom move_narc
+.PHONY: clean all dumprom move_narc build_world_narcs install_world_narcs
 
 move_narc clean restore: NOSCAN = 1
 
@@ -113,8 +113,8 @@ SDATTOOL := $(PYTHON) tools/SDATTool.py
 
 # Compiler/Assembler/Linker settings
 LDFLAGS = rom.ld -T $(C_SUBDIR)/linker.ld
-ASFLAGS =  -I$(shell pwd)/asm/include -I$(shell pwd)/include -mthumb -mcpu=arm946e-s -mtune=arm946e-s
-CFLAGS =  -I$(shell pwd)/include -mthumb -mno-thumb-interwork -mcpu=arm946e-s -mtune=arm946e-s -mno-long-calls -Wall -Wextra -Wno-builtin-declaration-mismatch -Wno-sequence-point -Wno-address-of-packed-member -Os -fira-loop-pressure -fipa-pta
+ASFLAGS =  -Iasm/include -Iinclude -mthumb -mcpu=arm946e-s -mtune=arm946e-s
+CFLAGS =  -Iinclude -mthumb -mno-thumb-interwork -mcpu=arm946e-s -mtune=arm946e-s -mno-long-calls -Wall -Wextra -Wno-builtin-declaration-mismatch -Wno-sequence-point -Wno-address-of-packed-member -Os -fira-loop-pressure -fipa-pta
 ARMIPS_FLAGS = -equ DEBUG_BATTLE_SCENARIOS 0
 
 ifeq ($(AUTO_TEST),Y)
@@ -130,6 +130,34 @@ BUILD := build
 BUILD_NARC := $(BUILD)/narc
 BASE := base
 FILESYS := $(BASE)/root
+
+WORLD_LEVEL_SCRIPTS_DIR := world/members/level_scripts
+WORLD_SCRIPTS_DIR := world/members/scripts
+WORLD_TEXT_DIR := world/members/text
+WORLD_HEADERS_DIR := world/members/headers
+WORLD_EVENTS_DIR := world/members/events
+WORLD_MATRICES_DIR := world/members/matrices
+WORLD_MAPS_DIR := world/members/maps
+WORLD_AREA_DATA_DIR := world/members/area_data
+WORLD_MAP_TEXTURES_DIR := world/members/map_textures
+WORLD_BUILDING_TEXTURES_DIR := world/members/building_textures
+WORLD_BUILDING_CONFIGS_DIR := world/members/building_configs
+WORLD_MAP_NAMES := world/mapname.bin
+ENGINE_SCRIPTS_DIR := world/engine_scripts/members
+WORLD_DATA_SOURCE := world/world_data.json
+WORLD_DATA_DIR := $(BUILD)/world_data_members
+WORLD_LEVEL_SCRIPTS_NARC := $(BUILD_NARC)/world_level_scripts.narc
+WORLD_TEXT_NARC := $(BUILD_NARC)/world_text.narc
+WORLD_HEADERS_NARC := $(BUILD_NARC)/world_headers.narc
+WORLD_EVENTS_NARC := $(BUILD_NARC)/world_events.narc
+WORLD_MATRICES_NARC := $(BUILD_NARC)/world_matrices.narc
+WORLD_MAPS_NARC := $(BUILD_NARC)/world_maps.narc
+WORLD_AREA_DATA_NARC := $(BUILD_NARC)/world_area_data.narc
+WORLD_MAP_TEXTURES_NARC := $(BUILD_NARC)/world_map_textures.narc
+WORLD_BUILDING_TEXTURES_NARC := $(BUILD_NARC)/world_building_textures.narc
+WORLD_BUILDING_CONFIGS_NARC := $(BUILD_NARC)/world_building_configs.narc
+ENGINE_SCRIPTS_NARC := $(BUILD_NARC)/engine_scripts.narc
+WORLD_DATA_NARC := $(BUILD_NARC)/world_data.narc
 
 LINK = $(BUILD)/linked.o
 OUTPUT = $(BUILD)/output.bin
@@ -298,6 +326,45 @@ $(LINK):$(OBJS)
 $(OUTPUT):$(LINK)
 	$(OBJCOPY) -O binary $< $@
 
+####################### Tyler World Data #######################
+build_world_narcs: $(VENV_ACTIVATE)
+	for file in $(SCR_SEQ_DEPENDENCIES); do $(ARMIPS) $$file; done
+	$(PYTHON) scripts/build_world_data.py $(WORLD_DATA_SOURCE) $(WORLD_DATA_DIR)
+	$(PYTHON) scripts/validate_narc_members.py $(WORLD_SCRIPTS_DIR) $(WORLD_LEVEL_SCRIPTS_DIR) $(WORLD_TEXT_DIR) $(WORLD_HEADERS_DIR) $(WORLD_EVENTS_DIR) $(WORLD_MATRICES_DIR) $(WORLD_MAPS_DIR) $(WORLD_AREA_DATA_DIR) $(WORLD_MAP_TEXTURES_DIR) $(WORLD_BUILDING_TEXTURES_DIR) $(WORLD_BUILDING_CONFIGS_DIR) $(ENGINE_SCRIPTS_DIR)
+	$(PYTHON) scripts/validate_world_headers.py $(WORLD_HEADERS_DIR)
+	$(PYTHON) scripts/validate_world_assets.py
+	$(PYTHON) scripts/validate_world_script_routing.py
+	mkdir -p $(BUILD_NARC)
+	$(NARCHIVE) create $(WORLD_LEVEL_SCRIPTS_NARC) $(WORLD_LEVEL_SCRIPTS_DIR) -nf
+	$(NARCHIVE) create $(WORLD_TEXT_NARC) $(WORLD_TEXT_DIR) -nf
+	$(NARCHIVE) create $(WORLD_HEADERS_NARC) $(WORLD_HEADERS_DIR) -nf
+	$(NARCHIVE) create $(WORLD_EVENTS_NARC) $(WORLD_EVENTS_DIR) -nf
+	$(NARCHIVE) create $(WORLD_MATRICES_NARC) $(WORLD_MATRICES_DIR) -nf
+	$(NARCHIVE) create $(WORLD_MAPS_NARC) $(WORLD_MAPS_DIR) -nf
+	$(NARCHIVE) create $(WORLD_AREA_DATA_NARC) $(WORLD_AREA_DATA_DIR) -nf
+	$(NARCHIVE) create $(WORLD_MAP_TEXTURES_NARC) $(WORLD_MAP_TEXTURES_DIR) -nf
+	$(NARCHIVE) create $(WORLD_BUILDING_TEXTURES_NARC) $(WORLD_BUILDING_TEXTURES_DIR) -nf
+	$(NARCHIVE) create $(WORLD_BUILDING_CONFIGS_NARC) $(WORLD_BUILDING_CONFIGS_DIR) -nf
+	$(NARCHIVE) create $(ENGINE_SCRIPTS_NARC) $(ENGINE_SCRIPTS_DIR) -nf
+	$(NARCHIVE) create $(WORLD_DATA_NARC) $(WORLD_DATA_DIR) -nf
+
+install_world_narcs: build_world_narcs $(BASE)/arm9.bin
+	mkdir -p $(FILESYS)/a/3/0
+	mkdir -p $(FILESYS)/fielddata/maptable
+	cp $(WORLD_LEVEL_SCRIPTS_NARC) $(FILESYS)/a/3/0/0
+	cp $(WORLD_TEXT_NARC) $(FILESYS)/a/3/0/1
+	cp $(ENGINE_SCRIPTS_NARC) $(FILESYS)/a/3/0/2
+	cp $(WORLD_DATA_NARC) $(FILESYS)/a/3/0/3
+	cp $(WORLD_HEADERS_NARC) $(FILESYS)/a/0/5/0
+	cp $(WORLD_EVENTS_NARC) $(FILESYS)/a/0/3/2
+	cp $(WORLD_MATRICES_NARC) $(FILESYS)/a/0/4/1
+	cp $(WORLD_MAPS_NARC) $(FILESYS)/a/0/6/5
+	cp $(WORLD_AREA_DATA_NARC) $(FILESYS)/a/0/4/2
+	cp $(WORLD_MAP_TEXTURES_NARC) $(FILESYS)/a/0/4/4
+	cp $(WORLD_BUILDING_TEXTURES_NARC) $(FILESYS)/a/0/7/0
+	cp $(WORLD_BUILDING_CONFIGS_NARC) $(FILESYS)/a/0/4/3
+	cp $(WORLD_MAP_NAMES) $(FILESYS)/fielddata/maptable/mapname.bin
+
 # only reextract from the rom if the romname is newer than the extracted arm9.bin
 $(BASE)/arm9.bin: $(ROMNAME) $(NDSTOOL) $(VENV_ACTIVATE)
 	rm -rf $(BASE)
@@ -308,11 +375,24 @@ $(BASE)/arm9.bin: $(ROMNAME) $(NDSTOOL) $(VENV_ACTIVATE)
 all: $(OUTPUT) $(OVERLAY_OUTPUTS) $(TOOLS) $(BASE)/arm9.bin
 	@# find and delete macOS and windows files
 	find . \( -name "*.DS_Store" -o -name "*:Zone.Identifier" \) -delete
+	$(PYTHON) scripts/validate_world_header_hooks.py
+	$(PYTHON) scripts/validate_world_identity_hooks.py
+	$(PYTHON) scripts/validate_world_role_gates.py
+	$(PYTHON) scripts/validate_world_map_markings.py
+	$(PYTHON) scripts/validate_world_pokegear.py
+	$(PYTHON) scripts/validate_world_spawn.py
+	$(PYTHON) scripts/validate_world_config.py
+	$(PYTHON) scripts/validate_world_text_routing.py
+	$(PYTHON) scripts/validate_world_level_script_routing.py
+	$(PYTHON) scripts/validate_engine_script_routing.py
+	$(PYTHON) scripts/validate_protected_global_text.py
 	$(PYTHON) scripts/make.py $(CFLAGS)
 # TODO: find a convenient way to not have this be a separate $(MAKE)
 	$(MAKE) move_narc
+	$(MAKE) install_world_narcs
 	$(ARMIPS) armips/global.s $(ARMIPS_FLAGS)
 	$(NARCHIVE) create $(FILESYS)/a/0/2/8 $(BUILD)/a028/ -nf
+	$(PYTHON) scripts/verify_world_narcs.py
 	@echo "Making ROM..."
 	$(NDSTOOL) -c $(BUILDROM) -9 $(BASE)/arm9.bin -7 $(BASE)/arm7.bin -y9 $(BASE)/overarm9.bin -y7 $(BASE)/overarm7.bin -d $(FILESYS) -y $(BASE)/overlay -t $(BASE)/banner.bin -h $(BASE)/header.bin
 	@echo "Done.  See output $(BUILDROM)."

@@ -1,6 +1,135 @@
 #include "include/config.h"
 #include "include/debug.h"
 
+# Tyler Dynamic Headers: replace all 27 static ARM9 Header accessors.
+# r3 is caller-scratch and leaves r0-r2 intact, including the coordinate output pointers.
+arm9 World_MapHeader_GetAreaDataBank 0203B27C 3
+arm9 World_MapHeader_GetMoveModelBank 0203B290 3
+arm9 World_MapHeader_GetMatrixId 0203B2AC 3
+arm9 World_MapHeader_GetMsgBank 0203B2C0 3
+arm9 World_MapHeader_GetScriptsBank 0203B2D4 3
+arm9 World_MapHeader_GetScriptHeaderBank 0203B2E8 3
+arm9 World_MapHeader_GetDayMusicId 0203B2FC 3
+arm9 World_MapHeader_GetNightMusicId 0203B310 3
+arm9 World_MapHeader_HasWildEncounters 0203B324 3
+arm9 World_MapHeader_GetWildEncounterBank 0203B344 3
+arm9 World_MapHeader_GetEventsBank 0203B358 3
+arm9 World_MapHeader_GetMapSec 0203B36C 3
+arm9 World_MapHeader_GetAreaIcon 0203B388 3
+arm9 World_MapHeader_GetMomCallIntroParam 0203B3A8 3
+arm9 World_MapHeader_GetRegionNo 0203B3C8 3
+arm9 World_MapHeader_GetWeatherType 0203B3E4 3
+arm9 World_MapHeader_GetCameraType 0203B400 3
+arm9 World_MapHeader_GetBattleBg 0203B41C 3
+arm9 World_MapHeader_IsEscapeRopeAllowed 0203B438 3
+arm9 World_MapHeader_IsFlyAllowed 0203B454 3
+arm9 World_MapHeader_IsBikeAllowed 0203B470 3
+arm9 World_MapHeader_CanPlacePhoneCalls 0203B48C 3
+arm9 World_MapHeader_CanReceivePhoneCalls 0203B4A8 3
+arm9 World_MapHeader_CanReceiveRadioSignal 0203B4C4 3
+arm9 World_MapHeader_GetMapType 0203B4DC 3
+arm9 World_MapHeader_GetFollowMode 0203B4F8 3
+arm9 World_MapHeader_GetWorldMapCoords 0203B518 3
+
+# Header 000 is a real world Header, not the old Pokemon Center list sentinel.
+# Center identity now comes from the Header's mapType field.
+arm9 World_MapHeader_MapIsPokemonCenter 0203B5DC 3
+
+# Map dialogue is author-owned World Text (a/3/0/1). Global/system messages,
+# including protected location names in bank 279, remain in a/0/2/7.
+arm9 World_LoadScriptsAndMessagesForCurrentMap 0204018C 3
+
+# Header-selected level scripts are a separate author-owned archive (a/3/0/0).
+arm9 World_MapScriptHeader_ReadFromNarc 0203B8C4 3
+
+# Header 002 is an ordinary world Header in the stripped base. Union Room and
+# its fixed-coordinate reception heuristic stay disabled until a future
+# metadata-defined world role explicitly enables them.
+arm9 World_UnionFeatureDisabled 0203B5CC 3
+arm9 World_UnionFeatureDisabled 0205337C 3
+
+# Disable the stock script command that warps directly to Header 002.
+arm9 World_UnionFeatureDisabled 02044480 3
+
+# Remove the remaining direct Header 002 checks while preserving unrelated
+# party behavior and the dedicated Wi-Fi battle-area IDs 4 and 5.
+arm9 World_PartyUnionMapRestrictionBypass 0207C480 3
+0001 World_OverlayUnionMapBypass 021F4450 2
+
+# Header 300 is an ordinary world Header in the stripped base. The stock
+# Pokemon League lobby role and its fixed Union-return coordinates stay absent
+# until an explicit metadata-defined League Lobby role is implemented.
+arm9 World_MapRoleAbsent 0203B5FC 3
+
+# Map Markings no longer use real Header 000 as their empty-slot sentinel.
+# The replacements preserve the save layout and recognize legacy zeroed slots.
+arm9 World_MapMarkingsSave_IsValid 0202F370 3
+arm9 World_MapMarkingsSave_Reset 0202F388 3
+arm9 World_MapMarkingsRAM_Reset 0202F3DC 3
+arm9 World_MapMarkingsRAM_IsInUseEraseIfNot 0202F400 3
+
+# Pokegear's selected-map cache uses 0xFFFF for "no selection" so Header 000
+# can redraw and behave like an ordinary selected location.
+0101 World_PokegearNoSelectionHook 021EB20E 3
+
+# Player MapObject creation used real Header 001 as a temporary/non-world owner.
+# This continuation hook writes 0xFFFF only for that placeholder argument.
+arm9 World_PlayerAvatarMapIdNoneHook 0205C568 5
+
+# The follower's temporary MapObject owner is also non-world, not Header 001.
+arm9 World_FollowerMapIdNoneHook 0206A13C 3
+
+# Party/NPC photo objects are temporary and do not belong to Header 001.
+arm9 World_PhotoMapIdNoneHook 0206AF14 2
+
+# The Apricorn expelled during the tree animation is also a temporary object.
+# This overlay hook reproduces the displaced MapObject_Create call itself.
+0001 World_ApricornMapIdNoneHook 02204AB0 3
+
+# A new save zero-fills five Location records. Header 000 is real now, so only
+# currentPosition may remain for the stock New Game initializer; the four
+# auxiliary Locations start with explicit map/warp ID -1 instead of fake map 0.
+arm9 World_LocalFieldDataDefaultsHook 0203B94C 3
+
+# New Game obtains its initial currentPosition from gWorldConfig instead of
+# retail's hidden Header 064 player-room constant.
+arm9 World_SetNewGamePosition 0203E398 3
+
+# Behavior-preserving WorldSpawn ownership. These six helpers now read the
+# editable HGE source table instead of retail's packed 30-record assembly data.
+arm9 World_GetFlyWarpData 0203BA74 3
+arm9 World_GetDeathWarpData 0203BAAC 3
+arm9 World_GetSpecialSpawnWarpData 0203BAE8 3
+arm9 World_FindDeathSpawnForMap 0203BB20 3
+arm9 World_FindFlySpawnForMap 0203BB50 3
+arm9 World_SetFlypointForMap 0203BB70 3
+
+# Blackout presentation and follow-up scripts use each WorldSpawn record's
+# recovery kind instead of reserving Header 063 or spawn ID 1 for Mom/home.
+arm9 World_BlackoutMessageKindHook 02052692 3
+arm9 World_BlackoutScriptKindHook 02052932 3
+
+# Game Clear postgame current/special Locations from ROM WorldConfig
+arm9 World_GameClearLocationsHook 02052D40 3
+
+# Dig/Escape Rope must not consume an unset specialSpawn Location.
+arm9 World_EscapeRopeValidityHook 020653A8 3
+arm9 World_DigValidityHook 020686AE 3
+
+# Unset dynamic Locations return neutral script data and cannot trigger a map load.
+arm9 World_DynamicWarpFloorGuardHook 02043C44 3
+0001 World_DynamicEventWarpGuardHook 021E7BD8 3
+arm9 World_ContinueDynamicWarpGuardHook 020534DE 3
+arm9 World_DirectDynamicWarpGuardHook 0205419E 3
+
+# WorldConfig owns main-world geography. Main-matrix membership no longer
+# assumes matrix 0000, and Pokégear no longer loads the New Bark Header solely
+# to obtain the world matrix.
+arm9 World_MapHeader_IsOnMainMatrix 0203B564 3
+arm9 World_PokedexGeographyFallbackHook 0203C9D8 3
+arm9 World_PokegearGeographyFallbackHook 02092C60 3
+arm9 World_LoadMainMatrixForPokegearHook 02092C7A 3
+
 #overlay 1 is loaded in at 021E5900
 #overlay 2 is loaded in at 02245B80
 #overlay 12 is loaded in at 022378C0

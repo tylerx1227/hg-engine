@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import json
 import subprocess
 import shutil
 import struct
@@ -46,6 +47,7 @@ HOOKS = 'hooks'
 ARM_HOOKS = 'armhooks'
 REPOINTS = 'repoints'
 ROUTINE_POINTERS = 'routinepointers'
+REPOINT_STATE = 'build/repoint_state.json'
 
 # step 1:  list folders in a directory
 SOURCE = "src"
@@ -199,6 +201,51 @@ def Repoint(rom: _io.BufferedReader, space: int, repointAt: int, slideFactor=0):
     space += (slideFactor)
     data = (space.to_bytes(4, 'little'))
     rom.write(bytes(data))
+
+
+def LoadRepointState() -> dict:
+    if not os.path.isfile(REPOINT_STATE):
+        return {}
+    try:
+        with open(REPOINT_STATE, 'r', encoding='UTF-8') as stateFile:
+            state = json.load(stateFile)
+    except (OSError, ValueError) as error:
+        raise RuntimeError(f'Could not read {REPOINT_STATE}: {error}') from error
+    if not isinstance(state, dict):
+        raise RuntimeError(f'{REPOINT_STATE} must contain a JSON object.')
+    return state
+
+
+def SaveRepointState(state: dict):
+    stateDirectory = os.path.dirname(REPOINT_STATE)
+    os.makedirs(stateDirectory, exist_ok=True)
+    temporaryPath = REPOINT_STATE + '.tmp'
+    with open(temporaryPath, 'w', encoding='UTF-8', newline='\n') as stateFile:
+        json.dump(state, stateFile, indent=2, sort_keys=True)
+        stateFile.write('\n')
+    os.replace(temporaryPath, REPOINT_STATE)
+
+
+def ApplyGuardedRepoint(rom: _io.BufferedReader, desired: int, repointAt: int,
+                        expected: int, previous: int, description: str):
+    rom.seek(repointAt)
+    rawValue = rom.read(4)
+    if len(rawValue) != 4:
+        raise RuntimeError(f'{description}: repoint address is outside the target file.')
+    actual = struct.unpack('<I', rawValue)[0]
+
+    allowedValues = {expected, desired}
+    if previous is not None:
+        allowedValues.add(previous)
+    if actual not in allowedValues:
+        allowedText = ', '.join(f'0x{value:08X}' for value in sorted(allowedValues))
+        raise RuntimeError(
+            f'{description}: structural baseline drift detected; found '
+            f'0x{actual:08X}, expected one of {allowedText}. Stop and investigate '
+            'this mismatch before attempting a clean rebuild.'
+        )
+
+    Repoint(rom, desired, repointAt)
 
 
 def ReplaceBytes(rom: _io.BufferedReader, offset: int, data: str):
@@ -537,6 +584,7 @@ def repoint():
 def offset():
     if os.path.isfile(REPOINTS):
         table = GetSymbols()
+        repointState = LoadRepointState()
         with open(REPOINTS, 'r') as repointList:
             definesDict = {}
             conditionals = []
@@ -548,7 +596,16 @@ def offset():
                 if line.strip().startswith('#') or line.strip() == '':
                     continue
 
-                files, symbol, address = line.split()
+                fields = line.split()
+                if len(fields) < 3:
+                    raise RuntimeError(f'Invalid repoint row: {line.rstrip()}')
+                files, symbol, address = fields[:3]
+                expected = None
+                for option in fields[3:]:
+                    if option.startswith('expected='):
+                        expected = int(option.split('=', 1)[1], 16)
+                    else:
+                        raise RuntimeError(f'Unknown repoint option {option}: {line.rstrip()}')
                 #offset = int(address, 16) - 0x08000000
                 try:
                     addOffset = 0
@@ -557,6 +614,8 @@ def offset():
                         addOffset = int(addOffsetStr, 16)
                     code = table[symbol]
                 except KeyError:
+                    if expected is not None:
+                        raise RuntimeError(f'Guarded repoint symbol missing: {symbol}')
                     print('Symbol missing:', symbol)
                     continue
                 if files == "arm9":
@@ -567,11 +626,26 @@ def offset():
                     with open("base/overarm9.bin", 'rb+') as y9Table:
                         y9Table.seek((int(files)*0x20)+0x4) # read the overlay memory address for offset calculation
                         offset = int(address, 16) - struct.unpack_from("<I", y9Table.read(4))[0] if int(address, 16) & 0x02000000 else int(address, 16) - 0x08000000
-                Repoint(rom, code, offset, addOffset)
+                desired = code + addOffset
+                if expected is None:
+                    Repoint(rom, code, offset, addOffset)
+                else:
+                    stateKey = f'{files}:{address.upper()}'
+                    previous = repointState.get(stateKey)
+                    ApplyGuardedRepoint(
+                        rom,
+                        desired,
+                        offset,
+                        expected,
+                        previous,
+                        f'{stateKey} -> {symbol}',
+                    )
+                    repointState[stateKey] = desired
+                    SaveRepointState(repointState)
                 rom.close()
 
 
-OVERLAYS_TO_DECOMPRESS = [1, 2, 6, 7, 8, 10, 12, 14, 15, 18, 23, 31, 53, 61, 63, 64, 68, 94, 96, 112, 123]
+OVERLAYS_TO_DECOMPRESS = [1, 2, 6, 7, 8, 10, 12, 14, 15, 18, 23, 31, 53, 61, 63, 64, 68, 94, 96, 101, 112, 123]
 
 
 def decompress():
